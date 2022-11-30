@@ -47,9 +47,10 @@ pub struct BuildState /*<'a>*/ {
 
 fn has_tsync_attribute(attributes: &Vec<syn::Attribute>) -> bool {
     utils::has_attribute("tsync", attributes)
-        || utils::get_attribute("doc", attributes)
-            .map(|x| x.tokens.to_string().contains("tsync managed"))
-            .unwrap_or(false)
+        || (utils::has_attribute("doc", attributes)
+            && utils::get_comments_internal(attributes.clone())
+                .join(",")
+                .contains("tsync managed"))
 }
 
 impl BuildState {

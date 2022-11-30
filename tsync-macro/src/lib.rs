@@ -8,7 +8,7 @@ use quote::__private::TokenStream as TokenStream2;
 pub fn tsync(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let item: TokenStream2 = item.into();
     quote::quote! {
-        ///tsync managed
+        /// tsync managed
         #item
     }
     .into()

@@ -66,6 +66,13 @@ pub fn has_attribute_arg(needle: &str, arg: &str, attributes: &Vec<syn::Attribut
 
 /// Get the doc string comments from the syn::attributes
 pub fn get_comments(attributes: Vec<syn::Attribute>) -> Vec<String> {
+    let comments = get_comments_internal(attributes);
+    comments
+        .into_iter()
+        .filter(|x| !x.contains("tsync managed"))
+        .collect()
+}
+pub fn get_comments_internal(attributes: Vec<syn::Attribute>) -> Vec<String> {
     let mut comments: Vec<String> = vec![];
 
     for attribute in attributes {
