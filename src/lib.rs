@@ -5,6 +5,7 @@ pub mod utils;
 use std::fs::File;
 use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
+use syn::{ImplItem, Item};
 use tsync_macro;
 use walkdir::WalkDir;
 
@@ -46,6 +47,9 @@ pub struct BuildState /*<'a>*/ {
 
 fn has_tsync_attribute(attributes: &Vec<syn::Attribute>) -> bool {
     utils::has_attribute("tsync", attributes)
+        || utils::get_attribute("doc", attributes)
+            .map(|x| x.tokens.to_string().contains("tsync managed"))
+            .unwrap_or(false)
 }
 
 impl BuildState {
@@ -64,6 +68,70 @@ impl BuildState {
                 }
                 self.types.push_str(&format!("{} */\n", indentation))
             }
+        }
+    }
+}
+
+fn process_rust_impl_items(
+    items: Vec<ImplItem>,
+    state: &mut BuildState,
+    debug: bool,
+    uses_typeinterface: bool,
+) {
+    for item in items {
+        match item {
+            syn::ImplItem::Const(exported_const) => {
+                check_tsync!(exported_const, in: "const", {
+                    exported_const.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            syn::ImplItem::Type(exported_type) => {
+                check_tsync!(exported_type, in: "type", {
+                    exported_type.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            _ => {}
+        }
+    }
+}
+
+fn process_rust_items(
+    items: Vec<Item>,
+    state: &mut BuildState,
+    debug: bool,
+    uses_typeinterface: bool,
+) {
+    for item in items {
+        match item {
+            syn::Item::Const(exported_const) => {
+                check_tsync!(exported_const, in: "const", {
+                    exported_const.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            syn::Item::Struct(exported_struct) => {
+                check_tsync!(exported_struct, in: "struct", {
+                    exported_struct.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            syn::Item::Enum(exported_enum) => {
+                check_tsync!(exported_enum, in: "enum", {
+                    exported_enum.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            syn::Item::Type(exported_type) => {
+                check_tsync!(exported_type, in: "type", {
+                    exported_type.convert_to_ts(state, debug, uses_typeinterface);
+                }, debug);
+            }
+            syn::Item::Mod(recurse_mod) => {
+                if let Some((_, items)) = recurse_mod.content {
+                    process_rust_items(items, state, debug, uses_typeinterface);
+                }
+            }
+            syn::Item::Impl(recurse_impl) => {
+                process_rust_impl_items(recurse_impl.items, state, debug, uses_typeinterface);
+            }
+            _ => {}
         }
     }
 }
@@ -106,32 +174,7 @@ fn process_rust_file(
     }
 
     let syntax = syntax.unwrap();
-
-    for item in syntax.items {
-        match item {
-            syn::Item::Const(exported_const) => {
-                check_tsync!(exported_const, in: "const", {
-                    exported_const.convert_to_ts(state, debug, uses_typeinterface);
-                }, debug);
-            }
-            syn::Item::Struct(exported_struct) => {
-                check_tsync!(exported_struct, in: "struct", {
-                    exported_struct.convert_to_ts(state, debug, uses_typeinterface);
-                }, debug);
-            }
-            syn::Item::Enum(exported_enum) => {
-                check_tsync!(exported_enum, in: "enum", {
-                    exported_enum.convert_to_ts(state, debug, uses_typeinterface);
-                }, debug);
-            }
-            syn::Item::Type(exported_type) => {
-                check_tsync!(exported_type, in: "type", {
-                    exported_type.convert_to_ts(state, debug, uses_typeinterface);
-                }, debug);
-            }
-            _ => {}
-        }
-    }
+    process_rust_items(syntax.items, state, debug, uses_typeinterface)
 }
 
 pub fn generate_typescript_defs(input: Vec<PathBuf>, output: PathBuf, debug: bool) {
