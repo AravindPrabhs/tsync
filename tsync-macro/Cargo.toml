@@ -12,4 +12,5 @@ name = "tsync_macro"
 path = "src/lib.rs"
 
 [dependencies]
+proc-macro2 = "1.0.57"
 quote = "1.0.21"

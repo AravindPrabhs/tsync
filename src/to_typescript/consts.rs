@@ -1,7 +1,6 @@
-use syn::__private::ToTokens;
-
 use crate::utils;
 use crate::BuildState;
+use quote::ToTokens;
 
 impl super::ToTypescript for syn::ItemConst {
     fn convert_to_ts(self, state: &mut BuildState, debug: bool, uses_typeinterface: bool) {

@@ -1,6 +1,6 @@
 use crate::{utils, BuildState};
 use convert_case::{Case, Casing};
-use syn::__private::ToTokens;
+use quote::ToTokens;
 
 static RENAME_RULES: &[(&str, convert_case::Case)] = &[
     ("lowercase", Case::Lower),

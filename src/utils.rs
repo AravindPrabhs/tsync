@@ -1,4 +1,5 @@
-use syn::{Attribute, NestedMeta, __private::ToTokens};
+use quote::ToTokens;
+use syn::{Attribute, NestedMeta};
 
 pub fn has_attribute(needle: &str, attributes: &Vec<syn::Attribute>) -> bool {
     attributes.iter().any(|attr| {
@@ -87,7 +88,7 @@ pub fn get_comments_internal(attributes: Vec<syn::Attribute>) -> Vec<String> {
         if is_doc {
             for token in attribute.tokens {
                 match token {
-                    syn::__private::quote::__private::TokenTree::Literal(comment) => {
+                    proc_macro2::TokenTree::Literal(comment) => {
                         let comment = comment.to_string();
                         let comment = comment[1..comment.len() - 1].trim();
                         comments.push(comment.to_string());
