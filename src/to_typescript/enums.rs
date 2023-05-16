@@ -212,7 +212,7 @@ fn make_variant(
             tag_name,
             field_name,
         ));
-        super::structs::process_fields(variant.fields, state, 6);
+        super::structs::process_fields(variant.fields, state, 6, casing.clone());
         state.types.push_str("    }");
     }
     state.types.push_str(";\n");
@@ -253,7 +253,7 @@ fn make_externally_tagged_variant(
         } else {
             prepend = utils::build_indentation(6);
             state.types.push('\n');
-            super::structs::process_fields(variant.fields, state, 8);
+            super::structs::process_fields(variant.fields, state, 8, casing.clone());
         }
         state
             .types
@@ -262,7 +262,7 @@ fn make_externally_tagged_variant(
     state.types.push_str(";\n");
 }
 
-fn to_enum_case(val: impl Into<Option<String>>) -> Option<Case> {
+pub fn to_enum_case(val: impl Into<Option<String>>) -> Option<Case> {
     val.into().and_then(|x| {
         for (name, rule) in RENAME_RULES {
             if x == *name {
